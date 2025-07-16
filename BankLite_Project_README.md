@@ -201,7 +201,7 @@ All endpoints are secured by JWT (except `/auth/token`). Swagger UI supports tok
 
 ---
 
-## 🗓️ 8-Day Development Timeline
+## ✅ Detailed Task Breakdown (Trello-Style Cards)
 
 | Day | Deliverables                             | Description                               |
 | --- | ---------------------------------------- | ----------------------------------------- |
@@ -216,14 +216,127 @@ All endpoints are secured by JWT (except `/auth/token`). Swagger UI supports tok
 
 ---
 
-## 🔒 Security Summary
+## 🗓️ 8-Day Development Timeline
+
+### Day 1 – 🔧 Project Initialization & Swagger Setup
+
+- Initialize a new Spring Boot 3.2.x project using Spring Initializr with Java 17, Spring Web, Spring Security, Spring Data JPA, Lombok, and Validation dependencies.
+- Setup Maven structure with `parent`, `groupId`, `artifactId`, and `version`.
+- Create package base `com.banklite` and subpackages (auth, account, transaction, etc.).
+- Add and configure Springdoc OpenAPI for Swagger UI.
+- Create Swagger configuration class and enable UI at `/swagger-ui.html`.
+- Add Git `.gitignore` and initialize local git repo.
+- [ ] Create new Spring Boot project with Java 17
+- [ ] Initialize Maven modules and dependency setup
+- [ ] Add Springdoc for OpenAPI support and configure `/swagger-ui.html`
+- [ ] Set up base project structure under `com.banklite`
+
+### Day 2 – 🧬 Entity + DTO Modeling
+
+- Define `Account` entity: fields like id, name, iban, currency, balance, createdAt.
+- Define `Transaction` entity: id, type (DEBIT/CREDIT), amount, date, description, linked account.
+- Add JPA annotations and relationships (OneToMany/ManyToOne).
+- Create `AccountDTO`, `TransactionDTO`, and request DTOs with `@NotNull`, `@Size`, etc.
+- Implement `ModelMapper` or manual conversion mappers.
+- Prepare basic seed data script if needed.
+- [ ] Design `Account` and `Transaction` JPA entities
+- [ ] Create corresponding DTOs with validation annotations
+- [ ] Setup `ModelMapper` or manual mapping logic if needed
+
+### Day 3 – 🔁 Account CRUD Implementation
+
+- Implement `AccountRepository` extending `JpaRepository<Account, Long>`.
+- Create `AccountService` with methods: `create`, `getById`, `update`, `delete`, `listAll`.
+- Build `AccountController` with endpoints: `GET/POST/PUT/DELETE` for `/accounts`.
+- Apply validation annotations on input DTOs.
+- Secure endpoints using `@PreAuthorize` (to be wired on Day 6).
+- Write unit tests for `AccountService` using Mockito.
+- [ ] Implement `AccountController` with `GET/POST/PUT/DELETE`
+- [ ] Write service layer and JPA repository logic
+- [ ] Add unit tests for each service and controller method
+
+### Day 4 – 💳 Transaction Module + Filters
+
+- Create `TransactionRepository`, `TransactionService`, and `TransactionController`.
+- Implement CRUD endpoints: `GET/POST/PUT/DELETE /transactions`.
+- Add filtering on `GET /transactions`: by accountId, amount range, date range.
+- Add pagination support using Spring `Pageable`.
+- Handle validation for filters and bad input edge cases.
+- Write unit tests for filters and controller logic.
+- [ ] Implement transaction CRUD APIs
+- [ ] Add support for filtering by amount, date, account ID
+- [ ] Write pagination logic and edge case handling
+
+### Day 5 – 🌐 External Bank API Integration (Mock)
+
+- Define external API client interface using `WebClient` (e.g., `BankDataClient`).
+- Implement mock response provider using `WireMockServer` with JSON stubs.
+- Build `/accounts/sync` endpoint to fetch mock data and persist.
+- Implement error handling and fallback if API is down.
+- Add timeout and retry configuration to the WebClient.
+- Integration test this flow using `@SpringBootTest` with WireMock running in memory.
+- [ ] Use `WebClient` for HTTP communication
+- [ ] Set up `WireMock` server with mock banking responses
+- [ ] Add fallback and retry with timeout configuration
+
+### Day 6 – 🔐 Auth, JWT & Rate Limiting
+
+- Implement `/auth/token` endpoint returning mock JWT.
+- Add custom `JwtAuthenticationFilter` and configure `SecurityConfig.java`.
+- Secure `/accounts` and `/transactions` endpoints using token auth.
+- Add rate limiting filter using `ConcurrentHashMap` or Guava RateLimiter per token.
+- Configure Spring CORS policy for localhost.
+- Add security-related integration tests for unauthorized access, invalid token.
+- [ ] Build `/auth/token` endpoint for JWT generation
+- [ ] Add Spring Security filters and config classes
+- [ ] Apply rate limiting using in-memory filter per token
+
+### Day 7 – 🧪 Testing & Quality
+
+- Write integration tests using `@SpringBootTest` with H2 database.
+- Create `@WebMvcTest` classes for `AccountController` and `TransactionController`.
+- Mock `WebClient` interactions using `WireMock` in tests.
+- Cover input validation, auth errors, and successful flows.
+- Ensure tests cover at least 80% of service layer logic.
+- Add `jacoco` plugin to Maven for code coverage reporting.
+- [ ] Write integration tests using Spring Boot + H2
+- [ ] Use `@WebMvcTest` for controller layer
+- [ ] Mock external HTTP calls using `WireMock`
+
+### Day 8 – 🐳 Docker & Delivery
+
+- Create `Dockerfile` using multi-stage build with `maven:3.9-jdk17` and `openjdk:17-jdk-slim`.
+
+- Build the project with `mvn clean package` and run local Docker image.
+
+- Add README badges (build, license, coverage).
+
+- Finalize and polish `README.md` with architecture diagrams and example curl requests.
+
+- Optional: add GitHub Actions `.yml` for CI pipeline (build + test).
+
+- Final review, testing, and code freeze for presentation.
+
+- [ ] Create `Dockerfile` with multi-stage build
+
+- [ ] Build and test Docker image locally
+
+- [ ] Finalize README with all sections and badges
+
+- [ ] Prepare for GitHub deployment and CI/CD pipeline setup
 
 - JWT token-based security (signed with HMAC)
+
 - Custom `BearerTokenFilter` for request authorization
+
 - Rate limiting: token-based limit per minute
+
 - CORS: allowed only for `localhost`
+
 - CSRF: disabled for REST API security best practices
+
 - Logging filters: account numbers and tokens masked
+
 - Validation: DTO fields checked at controller level
 
 ---
