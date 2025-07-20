@@ -1,13 +1,13 @@
-package com.banklite;
+package com.banklite.Banklite;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BankLiteApplication {
+public class BankliteApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BankLiteApplication.class, args);
+		SpringApplication.run(BankliteApplication.class, args);
 	}
 
 }
