@@ -1,4 +1,4 @@
-package com.banklite.Banklite;
+package com.banklite;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

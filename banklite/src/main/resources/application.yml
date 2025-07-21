@@ -1,0 +1,174 @@
+# BankLite Application Configuration
+spring:
+  application:
+    name: BankLite
+  # Database Configuration
+  datasource:
+    # H2 Database for development
+    url: jdbc:h2:mem:banklite
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  # H2 Console Configuration (Development only)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        "[format_sql]": true
+        dialect: org.hibernate.dialect.H2Dialect
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Actuator Configuration for Health Checks and Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        # Expose health, info, and metrics endpoints
+        include: health,info,metrics,env,beans,mappings
+      base-path: /actuator
+  endpoint:
+    health:
+      # Show detailed health information
+      show-details: always
+      show-components: always
+  health:
+    # Enable database health indicator
+    db:
+      enabled: true
+    # Enable disk space health indicator
+    diskspace:
+      enabled: true
+      threshold: 10MB
+  info:
+    # Enable build and git information in /actuator/info
+    build:
+      enabled: true
+    git:
+      enabled: true
+      mode: full
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    # OpenAPI JSON available at /v3/api-docs
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    # Swagger UI available at /swagger-ui.html
+    path: /swagger-ui.html
+    enabled: true
+    # Try it out functionality enabled by default
+    tryItOutEnabled: true
+    # Display request duration in Swagger UI
+    displayRequestDuration: true
+    # Group operations by tags
+    tagsSorter: alpha
+    # Sort operations alphabetically
+    operationsSorter: alpha
+    # Enable deep linking
+    deepLinking: true
+    # Display operation ID
+    displayOperationId: true
+    # Default models expand depth
+    defaultModelsExpandDepth: 1
+    # Default model expand depth
+    defaultModelExpandDepth: 1
+    # Show common extensions
+    showExtensions: true
+    # Show common extensions
+    showCommonExtensions: true
+
+# Application Information for /actuator/info endpoint
+info:
+  app:
+    name: BankLite
+    description: Yapily Interview Project - Modern Banking Application
+    version: 0.0.1-SNAPSHOT
+    java:
+      version: 21
+    spring-boot:
+      version: 3.5.4
+  company:
+    name: BankLite
+    website: https://banklite.com
+  contact:
+    email: support@banklite.com
+  build:
+    artifact: banklite
+    group: com.banklite
+
+# Logging Configuration
+logging:
+  level:
+    "[com.banklite]": INFO
+    "[org.springframework.web]": INFO
+    "[org.hibernate.SQL]": DEBUG
+    "[org.hibernate.type.descriptor.sql.BasicBinder]": TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:banklite-dev
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # Expose all endpoints in development
+
+logging:
+  level:
+    "[com.banklite]": DEBUG
+
+---
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://localhost:5432/banklite
+    username: ${DB_USERNAME:banklite}
+    password: ${DB_PASSWORD:password}
+    driverClassName: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics # Limited endpoints in production
+
+logging:
+  level:
+    "[com.banklite]": WARN
+    "[org.hibernate.SQL]": WARN
