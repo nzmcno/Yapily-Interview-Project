@@ -144,6 +144,37 @@ logging:
     "[com.banklite]": DEBUG
 
 ---
+# PostgreSQL Profile
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:banklite}
+    username: ${DB_USERNAME:banklite_user}
+    password: ${DB_PASSWORD:banklite_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Tables already exist
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        "[format_sql]": true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+
+logging:
+  level:
+    "[com.banklite]": ${LOG_LEVEL_BANKLITE:DEBUG}
+    "[org.hibernate.SQL]": ${LOG_LEVEL_SQL:DEBUG}
+
+---
 # Production Profile
 spring:
   config:
@@ -151,9 +182,9 @@ spring:
       on-profile: prod
   datasource:
     url: jdbc:postgresql://localhost:5432/banklite
-    username: ${DB_USERNAME:banklite}
-    password: ${DB_PASSWORD:password}
-    driverClassName: org.postgresql.Driver
+    username: ${DB_USERNAME:banklite_user}
+    password: ${DB_PASSWORD:banklite_password}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate

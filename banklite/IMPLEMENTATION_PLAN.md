@@ -1,0 +1,453 @@
+# BankLite: Simple REST API Implementation Plan
+
+## Overview
+Basic REST API for account management with PostgreSQL database. Simple CRUD operations with Docker support and basic testing.
+
+**Duration**: 4-5 hours  
+**Tech Stack**: Java 21, Spring Boot 3, PostgreSQL, Docker  
+
+---
+
+## Project Structure
+```
+src/main/java/com/banklite/
+├── BankliteApplication.java
+├── controller/
+│   └── AccountController.java
+├── service/
+│   └── AccountService.java
+├── repository/
+│   └── AccountRepository.java
+├── model/
+│   ├── Account.java
+│   └── dto/
+│       ├── AccountRequest.java
+│       └── AccountResponse.java
+└── config/
+    └── OpenApiConfig.java
+```
+
+---
+
+## Implementation Steps
+
+### 1. Project Setup ✅ COMPLETED
+
+#### pom.xml dependencies ✅
+Current dependencies include:
+- ✅ spring-boot-starter-web
+- ✅ spring-boot-starter-data-jpa  
+- ✅ spring-boot-starter-validation
+- ✅ postgresql driver
+- ✅ springdoc-openapi (version 2.6.0)
+- ✅ h2 database (for development)
+- ✅ lombok
+- ✅ spring-boot-starter-test
+- ✅ testcontainers
+- ✅ wiremock
+
+#### application.yml ✅
+Current configuration includes:
+- ✅ H2 database for development (jdbc:h2:mem:banklite)
+- ✅ PostgreSQL for production profile
+- ✅ Swagger UI at /swagger-ui.html
+- ✅ Actuator endpoints enabled
+- ✅ Multi-profile setup (dev/prod)
+
+**Status**: ✅ Application is running and Swagger is accessible at http://localhost:8080/swagger-ui.html
+
+### 2. Entity & Model (45 minutes)
+
+#### Account Entity
+```java
+@Entity
+@Table(name = "accounts")
+public class Account {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @NotNull
+    @Column(nullable = false)
+    private String accountHolderName;
+    
+    @NotNull
+    @Column(nullable = false, unique = true)
+    private String accountNumber;
+    
+    @NotNull
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal balance;
+    
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private Currency currency;
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+    
+    // Constructors, getters, setters
+}
+
+enum Currency {
+    USD, EUR, GBP
+}
+```
+
+#### DTOs
+```java
+public class AccountRequest {
+    @NotBlank
+    private String accountHolderName;
+    
+    @NotNull
+    @DecimalMin("0.0")
+    private BigDecimal balance;
+    
+    @NotNull
+    private Currency currency;
+    
+    // getters, setters
+}
+
+public class AccountResponse {
+    private Long id;
+    private String accountHolderName;
+    private String accountNumber;
+    private BigDecimal balance;
+    private Currency currency;
+    private LocalDateTime createdAt;
+    
+    // getters, setters
+}
+```
+
+### 3. Repository Layer (15 minutes)
+
+```java
+@Repository
+public interface AccountRepository extends JpaRepository<Account, Long> {
+    Optional<Account> findByAccountNumber(String accountNumber);
+    List<Account> findByAccountHolderNameContaining(String name);
+    List<Account> findByCurrency(Currency currency);
+}
+```
+
+### 4. Service Layer (30 minutes)
+
+```java
+@Service
+@Transactional
+public class AccountService {
+    
+    private final AccountRepository accountRepository;
+    
+    public AccountService(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
+    }
+    
+    public AccountResponse createAccount(AccountRequest request) {
+        Account account = new Account();
+        account.setAccountHolderName(request.getAccountHolderName());
+        account.setAccountNumber(generateAccountNumber());
+        account.setBalance(request.getBalance());
+        account.setCurrency(request.getCurrency());
+        
+        Account saved = accountRepository.save(account);
+        return mapToResponse(saved);
+    }
+    
+    public AccountResponse getAccount(Long id) {
+        Account account = accountRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+        return mapToResponse(account);
+    }
+    
+    public List<AccountResponse> getAllAccounts() {
+        return accountRepository.findAll()
+            .stream()
+            .map(this::mapToResponse)
+            .collect(Collectors.toList());
+    }
+    
+    public AccountResponse updateAccount(Long id, AccountRequest request) {
+        Account account = accountRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+            
+        account.setAccountHolderName(request.getAccountHolderName());
+        account.setBalance(request.getBalance());
+        account.setCurrency(request.getCurrency());
+        
+        Account updated = accountRepository.save(account);
+        return mapToResponse(updated);
+    }
+    
+    public void deleteAccount(Long id) {
+        if (!accountRepository.existsById(id)) {
+            throw new RuntimeException("Account not found");
+        }
+        accountRepository.deleteById(id);
+    }
+    
+    private String generateAccountNumber() {
+        return "ACC" + System.currentTimeMillis();
+    }
+    
+    private AccountResponse mapToResponse(Account account) {
+        AccountResponse response = new AccountResponse();
+        response.setId(account.getId());
+        response.setAccountHolderName(account.getAccountHolderName());
+        response.setAccountNumber(account.getAccountNumber());
+        response.setBalance(account.getBalance());
+        response.setCurrency(account.getCurrency());
+        response.setCreatedAt(account.getCreatedAt());
+        return response;
+    }
+}
+```
+
+### 5. REST Controller (45 minutes)
+
+```java
+@RestController
+@RequestMapping("/api/v1/accounts")
+@Tag(name = "Account Management")
+public class AccountController {
+    
+    private final AccountService accountService;
+    
+    public AccountController(AccountService accountService) {
+        this.accountService = accountService;
+    }
+    
+    @PostMapping
+    @Operation(summary = "Create new account")
+    public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody AccountRequest request) {
+        AccountResponse response = accountService.createAccount(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    
+    @GetMapping("/{id}")
+    @Operation(summary = "Get account by ID")
+    public ResponseEntity<AccountResponse> getAccount(@PathVariable Long id) {
+        AccountResponse response = accountService.getAccount(id);
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping
+    @Operation(summary = "Get all accounts")
+    public ResponseEntity<List<AccountResponse>> getAllAccounts() {
+        List<AccountResponse> accounts = accountService.getAllAccounts();
+        return ResponseEntity.ok(accounts);
+    }
+    
+    @PutMapping("/{id}")
+    @Operation(summary = "Update account")
+    public ResponseEntity<AccountResponse> updateAccount(
+            @PathVariable Long id, 
+            @Valid @RequestBody AccountRequest request) {
+        AccountResponse response = accountService.updateAccount(id, request);
+        return ResponseEntity.ok(response);
+    }
+    
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete account")
+    public ResponseEntity<Void> deleteAccount(@PathVariable Long id) {
+        accountService.deleteAccount(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+```
+
+### 6. Configuration (15 minutes)
+
+#### Swagger Configuration
+```java
+@Configuration
+public class OpenApiConfig {
+    
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("BankLite API")
+                        .version("1.0")
+                        .description("Simple banking account management API"));
+    }
+}
+```
+
+### 7. Testing (1 hour)
+
+#### Unit Tests
+```java
+@ExtendWith(MockitoExtension.class)
+class AccountServiceTest {
+    
+    @Mock
+    private AccountRepository accountRepository;
+    
+    @InjectMocks
+    private AccountService accountService;
+    
+    @Test
+    void shouldCreateAccount() {
+        // Given
+        AccountRequest request = new AccountRequest();
+        request.setAccountHolderName("John Doe");
+        request.setBalance(new BigDecimal("1000.00"));
+        request.setCurrency(Currency.USD);
+        
+        Account savedAccount = new Account();
+        savedAccount.setId(1L);
+        savedAccount.setAccountHolderName("John Doe");
+        savedAccount.setBalance(new BigDecimal("1000.00"));
+        savedAccount.setCurrency(Currency.USD);
+        
+        when(accountRepository.save(any(Account.class))).thenReturn(savedAccount);
+        
+        // When
+        AccountResponse response = accountService.createAccount(request);
+        
+        // Then
+        assertThat(response.getId()).isEqualTo(1L);
+        assertThat(response.getAccountHolderName()).isEqualTo("John Doe");
+        assertThat(response.getBalance()).isEqualTo(new BigDecimal("1000.00"));
+    }
+}
+```
+
+#### Integration Tests
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(properties = {
+    "spring.datasource.url=jdbc:h2:mem:testdb",
+    "spring.jpa.hibernate.ddl-auto=create-drop"
+})
+class AccountControllerIntegrationTest {
+    
+    @Autowired
+    private TestRestTemplate restTemplate;
+    
+    @Test
+    void shouldCreateAndGetAccount() {
+        // Create account
+        AccountRequest request = new AccountRequest();
+        request.setAccountHolderName("John Doe");
+        request.setBalance(new BigDecimal("1000.00"));
+        request.setCurrency(Currency.USD);
+        
+        ResponseEntity<AccountResponse> createResponse = restTemplate.postForEntity(
+            "/api/v1/accounts", request, AccountResponse.class);
+        
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(createResponse.getBody().getAccountHolderName()).isEqualTo("John Doe");
+        
+        // Get account
+        Long accountId = createResponse.getBody().getId();
+        ResponseEntity<AccountResponse> getResponse = restTemplate.getForEntity(
+            "/api/v1/accounts/" + accountId, AccountResponse.class);
+        
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResponse.getBody().getId()).isEqualTo(accountId);
+    }
+}
+```
+
+### 8. Docker Setup (30 minutes)
+
+#### Dockerfile
+```dockerfile
+FROM openjdk:21-jre-slim
+
+WORKDIR /app
+
+COPY target/banklite-*.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+#### docker-compose.yml
+```yaml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: banklite
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/banklite
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+
+volumes:
+  postgres_data:
+```
+
+---
+
+## Quick Start Commands
+
+```bash
+# Build the application
+mvn clean package
+
+# Run with Docker Compose
+docker-compose up --build
+
+# Test the API
+curl -X POST http://localhost:8080/api/v1/accounts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "accountHolderName": "John Doe",
+    "balance": 1000.00,
+    "currency": "USD"
+  }'
+
+# Get all accounts
+curl http://localhost:8080/api/v1/accounts
+
+# Access Swagger UI
+open http://localhost:8080/swagger-ui.html
+```
+
+---
+
+## API Endpoints
+
+- **POST** `/api/v1/accounts` - Create account
+- **GET** `/api/v1/accounts` - Get all accounts  
+- **GET** `/api/v1/accounts/{id}` - Get account by ID
+- **PUT** `/api/v1/accounts/{id}` - Update account
+- **DELETE** `/api/v1/accounts/{id}` - Delete account
+
+---
+
+## Testing Checklist
+
+- [ ] Unit tests for service layer
+- [ ] Integration tests for REST endpoints
+- [ ] API documentation with Swagger
+- [ ] Docker containerization working
+- [ ] PostgreSQL database connection
+- [ ] All CRUD operations functional
+
+This simplified plan focuses on the essentials: basic REST API, PostgreSQL integration, Docker support, and basic testing.
