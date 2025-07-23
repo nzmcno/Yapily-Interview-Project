@@ -56,74 +56,34 @@ Current configuration includes:
 
 **Status**: ✅ Application is running and Swagger is accessible at http://localhost:8080/swagger-ui.html
 
-### 2. Entity & Model (45 minutes)
+### 2. Entity & Model ✅ COMPLETED (45 minutes)
 
-#### Account Entity
-```java
-@Entity
-@Table(name = "accounts")
-public class Account {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @NotNull
-    @Column(nullable = false)
-    private String accountHolderName;
-    
-    @NotNull
-    @Column(nullable = false, unique = true)
-    private String accountNumber;
-    
-    @NotNull
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal balance;
-    
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private Currency currency;
-    
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-    
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
-    
-    // Constructors, getters, setters
-}
+#### Account Entity ✅
+**File**: `src/main/java/com/banklite/model/Account.java`
+- ✅ JPA annotations with PostgreSQL mapping
+- ✅ Lombok annotations for clean code
+- ✅ Validation constraints
+- ✅ CreationTimestamp and UpdateTimestamp
+- ✅ BigDecimal for precise currency handling
 
-enum Currency {
-    USD, EUR, GBP
-}
-```
+#### Currency Enum ✅
+**File**: `src/main/java/com/banklite/model/Currency.java`
+- ✅ USD, EUR, GBP support
+- ✅ Enum stored as STRING in database
 
-#### DTOs
-```java
-public class AccountRequest {
-    @NotBlank
-    private String accountHolderName;
-    
-    @NotNull
-    @DecimalMin("0.0")
-    private BigDecimal balance;
-    
-    @NotNull
-    private Currency currency;
-    
-    // getters, setters
-}
+#### DTOs ✅
+**AccountRequest** - `src/main/java/com/banklite/model/dto/AccountRequest.java`
+- ✅ Validation annotations with custom messages
+- ✅ @NotBlank for accountHolderName
+- ✅ @DecimalMin("0.0") for balance validation
+- ✅ @NotNull for required fields
+- ✅ Lombok annotations for clean code
 
-public class AccountResponse {
-    private Long id;
-    private String accountHolderName;
-    private String accountNumber;
-    private BigDecimal balance;
-    private Currency currency;
-    private LocalDateTime createdAt;
-    
-    // getters, setters
-}
-```
+**AccountResponse** - `src/main/java/com/banklite/model/dto/AccountResponse.java`  
+- ✅ All necessary fields for API responses
+- ✅ LocalDateTime for timestamp fields
+- ✅ Clean DTO without JPA annotations
+- ✅ Lombok annotations for clean code
 
 ### 3. Repository Layer (15 minutes)
 
