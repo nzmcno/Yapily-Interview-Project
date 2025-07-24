@@ -85,89 +85,42 @@ Current configuration includes:
 - ✅ Clean DTO without JPA annotations
 - ✅ Lombok annotations for clean code
 
-### 3. Repository Layer (15 minutes)
+### 3. Repository Layer ✅ COMPLETED (15 minutes)
 
-```java
-@Repository
-public interface AccountRepository extends JpaRepository<Account, Long> {
-    Optional<Account> findByAccountNumber(String accountNumber);
-    List<Account> findByAccountHolderNameContaining(String name);
-    List<Account> findByCurrency(Currency currency);
-}
-```
+**File**: `src/main/java/com/banklite/repository/AccountRepository.java`
+- ✅ Extends JpaRepository<Account, Long> for basic CRUD operations
+- ✅ findByAccountNumber() for unique account lookup
+- ✅ findByAccountHolderNameContaining() for search functionality
+- ✅ findByCurrency() for filtering by currency type
+- ✅ Spring Data JPA auto-implementation
+- ✅ @Repository annotation for component scanning
 
-### 4. Service Layer (30 minutes)
+**Status**: ✅ Repository successfully registered - "Found 1 JPA repository interface"
 
-```java
-@Service
-@Transactional
-public class AccountService {
-    
-    private final AccountRepository accountRepository;
-    
-    public AccountService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
-    }
-    
-    public AccountResponse createAccount(AccountRequest request) {
-        Account account = new Account();
-        account.setAccountHolderName(request.getAccountHolderName());
-        account.setAccountNumber(generateAccountNumber());
-        account.setBalance(request.getBalance());
-        account.setCurrency(request.getCurrency());
-        
-        Account saved = accountRepository.save(account);
-        return mapToResponse(saved);
-    }
-    
-    public AccountResponse getAccount(Long id) {
-        Account account = accountRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Account not found"));
-        return mapToResponse(account);
-    }
-    
-    public List<AccountResponse> getAllAccounts() {
-        return accountRepository.findAll()
-            .stream()
-            .map(this::mapToResponse)
-            .collect(Collectors.toList());
-    }
-    
-    public AccountResponse updateAccount(Long id, AccountRequest request) {
-        Account account = accountRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Account not found"));
-            
-        account.setAccountHolderName(request.getAccountHolderName());
-        account.setBalance(request.getBalance());
-        account.setCurrency(request.getCurrency());
-        
-        Account updated = accountRepository.save(account);
-        return mapToResponse(updated);
-    }
-    
-    public void deleteAccount(Long id) {
-        if (!accountRepository.existsById(id)) {
-            throw new RuntimeException("Account not found");
-        }
-        accountRepository.deleteById(id);
-    }
-    
-    private String generateAccountNumber() {
-        return "ACC" + System.currentTimeMillis();
-    }
-    
-    private AccountResponse mapToResponse(Account account) {
-        AccountResponse response = new AccountResponse();
-        response.setId(account.getId());
-        response.setAccountHolderName(account.getAccountHolderName());
-        response.setAccountNumber(account.getAccountNumber());
-        response.setBalance(account.getBalance());
-        response.setCurrency(account.getCurrency());
-        response.setCreatedAt(account.getCreatedAt());
-        return response;
-    }
-}
-```
+### 4. Service Layer ✅ COMPLETED (30 minutes)
+
+**File**: `src/main/java/com/banklite/service/AccountService.java`
+
+#### ✅ Business Logic Methods:
+- **createAccount()** - Creates new account with auto-generated account number
+- **getAccount()** - Retrieves account by ID with error handling  
+- **getAllAccounts()** - Returns all accounts as response DTOs
+- **updateAccount()** - Updates existing account details
+- **deleteAccount()** - Soft validation before deletion
+
+#### ✅ Technical Features:
+- **@Service** annotation for Spring component scanning
+- **@Transactional** for database transaction management
+- **Constructor injection** for AccountRepository dependency
+- **generateAccountNumber()** - Unique ID generation using timestamp
+- **mapToResponse()** - Entity to DTO mapping utility
+- **Exception handling** - RuntimeException for not found cases
+
+#### ✅ Database Integration:
+- **PostgreSQL compatible** - Works with existing accounts table
+- **JPA Repository methods** - save(), findById(), findAll(), deleteById()
+- **Entity mapping** - Account entity to AccountResponse DTO
+- **Transaction safety** - All operations are transactional
 
 ### 5. REST Controller (45 minutes)
 
