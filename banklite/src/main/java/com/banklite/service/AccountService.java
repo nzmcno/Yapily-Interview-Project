@@ -1,5 +1,6 @@
 package com.banklite.service;
 
+import com.banklite.exception.AccountNotFoundException;
 import com.banklite.model.Account;
 import com.banklite.model.dto.AccountRequest;
 import com.banklite.model.dto.AccountResponse;
@@ -33,7 +34,7 @@ public class AccountService {
     
     public AccountResponse getAccount(Long id) {
         Account account = accountRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Account not found"));
+            .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + id));
         return mapToResponse(account);
     }
     
@@ -46,7 +47,7 @@ public class AccountService {
     
     public AccountResponse updateAccount(Long id, AccountRequest request) {
         Account account = accountRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Account not found"));
+            .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + id));
             
         account.setAccountHolderName(request.getAccountHolderName());
         account.setBalance(request.getBalance());
@@ -58,7 +59,7 @@ public class AccountService {
     
     public void deleteAccount(Long id) {
         if (!accountRepository.existsById(id)) {
-            throw new RuntimeException("Account not found");
+            throw new AccountNotFoundException("Account not found with id: " + id);
         }
         accountRepository.deleteById(id);
     }

@@ -122,76 +122,59 @@ Current configuration includes:
 - **Entity mapping** - Account entity to AccountResponse DTO
 - **Transaction safety** - All operations are transactional
 
-### 5. REST Controller (45 minutes)
+### 5. REST Controller ✅ COMPLETED (45 minutes)
 
-```java
-@RestController
-@RequestMapping("/api/v1/accounts")
-@Tag(name = "Account Management")
-public class AccountController {
-    
-    private final AccountService accountService;
-    
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
-    }
-    
-    @PostMapping
-    @Operation(summary = "Create new account")
-    public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody AccountRequest request) {
-        AccountResponse response = accountService.createAccount(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-    
-    @GetMapping("/{id}")
-    @Operation(summary = "Get account by ID")
-    public ResponseEntity<AccountResponse> getAccount(@PathVariable Long id) {
-        AccountResponse response = accountService.getAccount(id);
-        return ResponseEntity.ok(response);
-    }
-    
-    @GetMapping
-    @Operation(summary = "Get all accounts")
-    public ResponseEntity<List<AccountResponse>> getAllAccounts() {
-        List<AccountResponse> accounts = accountService.getAllAccounts();
-        return ResponseEntity.ok(accounts);
-    }
-    
-    @PutMapping("/{id}")
-    @Operation(summary = "Update account")
-    public ResponseEntity<AccountResponse> updateAccount(
-            @PathVariable Long id, 
-            @Valid @RequestBody AccountRequest request) {
-        AccountResponse response = accountService.updateAccount(id, request);
-        return ResponseEntity.ok(response);
-    }
-    
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete account")
-    public ResponseEntity<Void> deleteAccount(@PathVariable Long id) {
-        accountService.deleteAccount(id);
-        return ResponseEntity.noContent().build();
-    }
-}
-```
+**File**: `src/main/java/com/banklite/controller/AccountController.java`
 
-### 6. Configuration (15 minutes)
+#### ✅ REST API Endpoints:
+- **POST** `/api/v1/accounts` - Create new account (HTTP 201)
+- **GET** `/api/v1/accounts` - Get all accounts (HTTP 200)
+- **GET** `/api/v1/accounts/{id}` - Get account by ID (HTTP 200)
+- **PUT** `/api/v1/accounts/{id}` - Update account (HTTP 200)
+- **DELETE** `/api/v1/accounts/{id}` - Delete account (HTTP 204)
 
-#### Swagger Configuration
-```java
-@Configuration
-public class OpenApiConfig {
-    
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("BankLite API")
-                        .version("1.0")
-                        .description("Simple banking account management API"));
-    }
-}
-```
+#### ✅ Technical Features:
+- **@RestController** for REST API functionality
+- **@RequestMapping("/api/v1/accounts")** for base URL mapping
+- **@Tag(name = "Account Management")** for Swagger documentation
+- **@Valid** for request body validation
+- **ResponseEntity** for proper HTTP status codes
+- **Constructor injection** for AccountService dependency
+
+#### ✅ Swagger Integration:
+- **@Operation** annotations for API documentation
+- **OpenAPI 3.0** compatible
+- **Account Management** tag for grouping endpoints
+- **Auto-generated API docs** at `/swagger-ui.html`
+
+#### ✅ Status:
+- **Application started**: PostgreSQL connected, Hibernate SQL working
+- **API endpoints registered**: Spring MVC mapping complete
+- **OpenAPI initialized**: "Init duration for springdoc-openapi is: 282 ms"
+
+### 6. Configuration ✅ COMPLETED (15 minutes)
+
+#### ✅ OpenAPI Configuration
+**File**: `src/main/java/com/banklite/config/OpenApiConfig.java`
+- ✅ **@Configuration** Spring configuration class
+- ✅ **@Bean** OpenAPI bean definition
+- ✅ **Title**: "BankLite API"
+- ✅ **Version**: "1.0"
+- ✅ **Description**: "Simple banking account management API"
+- ✅ **Integration**: Works with AccountController @Tag and @Operation annotations
+
+#### ✅ Web Configuration
+**File**: `src/main/java/com/banklite/config/WebConfig.java`
+- ✅ **CORS Configuration** for cross-origin requests
+- ✅ **API endpoints**: `/api/**` with full HTTP methods
+- ✅ **Actuator endpoints**: `/actuator/**` with GET method
+- ✅ **Frontend support**: localhost:3000, 4200, 8081 origins
+- ✅ **WebMvcConfigurer** implementation
+
+#### ✅ Status:
+- **OpenAPI initialized**: Swagger UI accessible at `/swagger-ui.html`
+- **CORS enabled**: Frontend applications can access API
+- **Spring Boot Configuration**: All beans properly registered
 
 ### 7. Testing (1 hour)
 
