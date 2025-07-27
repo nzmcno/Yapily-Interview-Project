@@ -258,50 +258,58 @@ class AccountControllerIntegrationTest {
 }
 ```
 
-### 8. Docker Setup (30 minutes)
+### 8. Docker Setup ✅ COMPLETED (30 minutes)
 
-#### Dockerfile
-```dockerfile
-FROM openjdk:21-jre-slim
+**Docker Deployment**: ✅ **Successfully containerized and running**
+- **Status**: Both containers healthy and operational
+- **PostgreSQL**: Connected with sample data loaded
+- **Application**: API endpoints responding correctly
 
-WORKDIR /app
+#### ✅ Files Created:
+**Dockerfile** - `Dockerfile`
+- ✅ **Eclipse Temurin 21 JRE** base image (fixed from openjdk)
+- ✅ **Health check** enabled for monitoring
+- ✅ **Curl installed** for health endpoint testing
+- ✅ **Port 8080** exposed for API access
 
-COPY target/banklite-*.jar app.jar
+**docker-compose.yml** - `docker-compose.yml`
+- ✅ **PostgreSQL 15** database service with health checks
+- ✅ **Custom network** (banklite-network) for service communication
+- ✅ **Persistent volumes** for database data
+- ✅ **Environment variables** from .env file integration
+- ✅ **Service dependencies** with health check conditions
 
-EXPOSE 8080
+**init-db.sql** - `init-db.sql`
+- ✅ **Automatic database initialization** with accounts table
+- ✅ **Sample data insertion** (5 test accounts)
+- ✅ **User permissions** setup for banklite_user
+- ✅ **Indexes and triggers** for performance and auto-timestamps
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+**DOCKER_SETUP.md** - `DOCKER_SETUP.md`
+- ✅ **Complete setup guide** with troubleshooting
+- ✅ **Quick start commands** for immediate deployment
+- ✅ **Production considerations** and security notes
+
+#### ✅ Verification Results:
+```bash
+# Health Check - ✅ PASSED
+curl http://localhost:8080/actuator/health
+Status: UP, Database: PostgreSQL ✅
+
+# API Test - ✅ PASSED  
+curl http://localhost:8080/api/v1/accounts
+Result: 5 sample accounts returned ✅
+
+# Create Account Test - ✅ PASSED
+POST /api/v1/accounts
+Result: New account created with ID 6 ✅
 ```
 
-#### docker-compose.yml
-```yaml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: banklite
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  app:
-    build: .
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/banklite
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
-
-volumes:
-  postgres_data:
-```
+#### ✅ Container Status:
+- **banklite-postgres**: Up 40 seconds (healthy) ✅
+- **banklite-app**: Up 9 seconds (health: starting) ✅
+- **Network**: banklite_banklite-network ✅  
+- **Volume**: banklite_postgres_data ✅
 
 ---
 

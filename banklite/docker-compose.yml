@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: banklite-postgres
+    environment:
+      POSTGRES_DB: banklite
+      POSTGRES_USER: banklite_user
+      POSTGRES_PASSWORD: banklite_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U banklite_user -d banklite"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - banklite-network
+
+  app:
+    build: .
+    container_name: banklite-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database Configuration
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: banklite
+      DB_USERNAME: banklite_user
+      DB_PASSWORD: banklite_password
+      
+      # Spring Profiles
+      SPRING_PROFILES_ACTIVE: postgres
+      
+      # Server Configuration
+      SERVER_PORT: 8080
+      
+      # Logging Configuration
+      LOG_LEVEL_ROOT: INFO
+      LOG_LEVEL_BANKLITE: DEBUG
+      LOG_LEVEL_SQL: false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - banklite-network
+
+volumes:
+  postgres_data:
+
+networks:
+  banklite-network:
+    driver: bridge
